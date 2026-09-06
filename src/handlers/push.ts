@@ -27,9 +27,12 @@ export interface PushEventPayload {
   repository: { full_name: string; default_branch: string };
 }
 
-// Matches GitHub's default merge commit format ("Merge pull request #123 from user/branch").
-// Custom merge commit messages or rebase-merges won't match and will produce a notification.
-const PR_MERGE_COMMIT_PATTERN = /^Merge pull request #\d+/;
+// Matches GitHub's default merge commit, squash merge, and branch merge formats
+const PR_MERGE_PATTERNS = [
+  /^Merge pull request #\d+/i,
+  /^Merge branch /i,
+  /\(#\d+\)(?:\n|$)/m,
+];
 
 export async function handlePushEvent(
   client: Client,
@@ -54,7 +57,13 @@ export async function handlePushEvent(
   }
 
   // Skip if every commit is a PR merge commit (PR handler covers these)
-  if (commits.length > 0 && commits.every(c => PR_MERGE_COMMIT_PATTERN.test(c.message))) {
+  if (commits.length > 0 && commits.every(c => PR_MERGE_PATTERNS.some(p => p.test(c.message)))) {
+    return;
+  }
+
+  // Skip if commits belong to a PR that was just merged in this repo (handles Rebase & Merge)
+  if (db.isRecentPrMerge(repo, commits.map(c => c.id))) {
+    console.log(`[repo-relay] Skipping push notification for ${repo} because commits belong to a recently merged PR`);
     return;
   }
 

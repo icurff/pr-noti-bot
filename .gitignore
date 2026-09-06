@@ -26,7 +26,7 @@ npm-debug.log*
 
 # Test coverage
 coverage/
-
+example/
 dist/
 
 # State database & storage

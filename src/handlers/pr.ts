@@ -184,15 +184,12 @@ async function handlePrPush(
 
   // If no message exists yet (PR opened before bot was set up), create one
   if (!existing) {
-    const { message, thread } = await createPrMessageWithThread(channel, db, repo, pr);
-    existing = { repo, prNumber: pr.number, channelId: channel.id, messageId: message.id, threadId: thread.id, createdAt: '', lastUpdated: '' };
+    const { message } = await createPrMessageWithThread(channel, db, repo, pr);
+    existing = { repo, prNumber: pr.number, channelId: channel.id, messageId: message.id, threadId: null, createdAt: '', lastUpdated: '' };
   } else {
     // Update PR data for future rebuilds
     savePrDataFromPrData(db, repo, pr);
   }
-
-  // Get or create thread
-  const thread = await getOrCreateThread(channel, db, repo, pr, existing);
 
   const sha = payload.after ?? payload.pull_request.head.sha;
 
@@ -202,7 +199,11 @@ async function handlePrPush(
     `${pr.url}/commits`
   );
 
-  await withRetry(() => thread.send(replyText));
+  // Send push notification directly to channel
+  await withRetry(() => channel.send({
+    content: replyText,
+    reply: { messageReference: existing!.messageId, failIfNotExists: false }
+  }));
   db.updatePrMessageTimestamp(repo, pr.number);
 }
 
@@ -250,8 +251,10 @@ async function editExistingPrMessage(
 
     const reply = options.threadReply;
     if (reply) {
-      const thread = await getOrCreateThread(channel, db, repo, pr, existing);
-      await withRetry(() => thread.send(reply));
+      const payload = typeof reply === 'string'
+        ? { content: reply, reply: { messageReference: message.id, failIfNotExists: false } }
+        : { ...reply, reply: { messageReference: message.id, failIfNotExists: false } };
+      await withRetry(() => channel.send(payload));
     }
 
     db.updatePrMessageTimestamp(repo, pr.number);
@@ -268,39 +271,26 @@ async function editExistingPrMessage(
 }
 
 /**
- * Send a fresh PR embed, attach its updates thread, and persist the
- * message/data/status rows. Pass `seedThread: false` to skip the initial
- * thread message (e.g. closed PRs that get no further updates).
+ * Send a fresh PR embed directly to channel without creating a thread.
  */
 async function createPrMessageWithThread(
   channel: TextChannel,
   db: StateDb,
   repo: string,
   pr: PrData,
-  options: { seedThread?: boolean } = {}
-): Promise<{ message: Message; thread: ThreadChannel }> {
+  _options: { seedThread?: boolean } = {}
+): Promise<{ message: Message; thread: null }> {
   const embed = buildPrEmbed(pr);
   const components = [buildPrComponents(pr.url)];
   const message = await withRetry(() => channel.send({ embeds: [embed], components }));
 
-  // Create a thread for updates
-  const thread = await withRetry(() => message.startThread({
-    name: buildThreadName('PR', pr.number, pr.title),
-    autoArchiveDuration: 1440, // 24 hours
-  }));
-
-  db.savePrMessage(repo, pr.number, channel.id, message.id, thread.id);
+  db.savePrMessage(repo, pr.number, channel.id, message.id, null);
 
   // Save PR data for future embed rebuilding
   savePrDataFromPrData(db, repo, pr);
   db.savePrStatus(repo, pr.number);
 
-  if (options.seedThread !== false) {
-    // Post initial message in thread
-    await withRetry(() => thread.send(`Updates for PR #${pr.number} will appear here.`));
-  }
-
-  return { message, thread };
+  return { message, thread: null };
 }
 
 // Helper to save PR data from PrData interface
@@ -398,9 +388,11 @@ export async function updatePrEmbedAndNotify(
       await withRetry(() => message.edit({ embeds: [embed], components }));
 
       if (threadMessage) {
-        // Post to thread
-        const thread = await getOrCreateThread(channel, db, repo, statusData.prData, existing);
-        await withRetry(() => thread.send(threadMessage));
+        // Send notification directly to channel referencing the PR message
+        const payload = typeof threadMessage === 'string'
+          ? { content: threadMessage, reply: { messageReference: message.id, failIfNotExists: false } }
+          : { ...threadMessage, reply: { messageReference: message.id, failIfNotExists: false } };
+        await withRetry(() => channel.send(payload));
         posted = true;
       }
     }

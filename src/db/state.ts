@@ -321,7 +321,7 @@ export class StateDb {
     prNumber: number,
     channelId: string,
     messageId: string,
-    threadId?: string
+    threadId?: string | null
   ): void {
     const stmt = this.db.prepare(`
       INSERT INTO pr_messages (repo, pr_number, channel_id, message_id, thread_id)
@@ -544,7 +544,7 @@ export class StateDb {
     issueNumber: number,
     channelId: string,
     messageId: string,
-    threadId?: string
+    threadId?: string | null
   ): void {
     const stmt = this.db.prepare(`
       INSERT INTO issue_messages (repo, issue_number, channel_id, message_id, thread_id)
@@ -675,6 +675,32 @@ export class StateDb {
     const stmt = this.db.prepare("DELETE FROM reaction_media WHERE id = ?");
     const info = stmt.run(id);
     return info.changes > 0;
+  }
+
+  isRecentPrMerge(repo: string, commitShas: string[]): boolean {
+    try {
+      const stmt = this.db.prepare(`
+        SELECT payload FROM event_log
+        WHERE repo = ? AND event_type = 'pr.closed'
+          AND created_at >= datetime('now', '-2 minutes')
+        ORDER BY id DESC LIMIT 5
+      `);
+      const rows = stmt.all(repo) as Array<{ payload: string | null }>;
+      for (const row of rows) {
+        if (!row.payload) continue;
+        const data = JSON.parse(row.payload);
+        if (data.pull_request?.merged) {
+          const prHeadSha = data.pull_request.head?.sha;
+          const prMergeSha = data.pull_request.merge_commit_sha;
+          if (prMergeSha && commitShas.includes(prMergeSha)) return true;
+          if (prHeadSha && commitShas.includes(prHeadSha)) return true;
+          return true;
+        }
+      }
+    } catch {
+      // Best-effort
+    }
+    return false;
   }
 
   close(): void {

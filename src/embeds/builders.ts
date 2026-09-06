@@ -74,12 +74,12 @@ export function buildPrEmbed(
     })
     .addFields(
       {
-        name: 'Branch',
+        name: '🌿 Branch',
         value: `\`${pr.branch}\` ➔ \`${pr.baseBranch}\``,
         inline: true,
       },
       {
-        name: 'Changes',
+        name: '📊 Changes',
         value: `${pr.changedFiles} files • ${buildDiffBar(pr.additions, pr.deletions)}`,
         inline: true,
       }
@@ -89,33 +89,36 @@ export function buildPrEmbed(
   // Add review section
   const reviewStatusText = reviews?.humanReview && reviews.humanReview !== 'none'
     ? getHumanReviewStatus(reviews.humanReview, reviews.humanReviewer)
-    : '*Awaiting Review*';
+    : '⏳ *Awaiting Review*';
 
   embed.addFields({
-    name: 'Reviews',
+    name: '👀 Reviews',
     value: reviewStatusText,
     inline: false,
   });
 
   // Add CI section
-  const ciStatus = ci ? getCiStatusText(ci) : '*Pending*';
+  const ciStatus = ci ? getCiStatusText(ci) : '⏳ *Pending*';
   embed.addFields({
-    name: 'CI Status',
+    name: '⚙️ CI Status',
     value: ciStatus,
     inline: false,
   });
 
-  // Add merged info if applicable
-  if (pr.state === 'merged' && pr.mergedAt) {
-    embed.addFields({
-      name: 'Merged',
-      value: `${pr.mergedBy ? `by **@${pr.mergedBy}** ` : ''}on ${new Date(pr.mergedAt).toLocaleString()}`,
-      inline: false,
-    });
-
+  // Add GIFs and merged info
+  if (pr.state === 'merged') {
+    if (pr.mergedAt) {
+      embed.addFields({
+        name: '🎉 Merged',
+        value: `${pr.mergedBy ? `by **@${pr.mergedBy}** ` : ''}on ${new Date(pr.mergedAt).toLocaleString()}`,
+        inline: false,
+      });
+    }
     if (areGifsEnabled()) {
       embed.setImage(getRandomGif('merged'));
     }
+  } else if (pr.state === 'open' && areGifsEnabled()) {
+    embed.setImage(getRandomGif('opened'));
   }
 
   return embed;
@@ -142,13 +145,14 @@ export function buildPushReply(
 ): string {
   const shaShort = sha.substring(0, 7);
   const link = compareUrl ? `[\`${shaShort}\`](${compareUrl})` : `\`${shaShort}\``;
-  return `**Push by @${author}** • (${link})`;
+  return `🚀 **Push by @${author}** • (${link})`;
 }
 
 export function buildCiReplyText(ci: CiStatus): string {
   const statusLabel = ci.status === 'success' ? 'Passed' : ci.status === 'failure' ? 'Failed' : ci.status === 'running' ? 'Running...' : 'Pending';
+  const icon = ci.status === 'success' ? '✅' : ci.status === 'failure' ? '❌' : ci.status === 'running' ? '🔄' : '⏳';
   const workflowLabel = ci.workflowName ? `\`${ci.workflowName}\`` : '`CI`';
-  return `**CI Workflow: ${statusLabel}** • ${workflowLabel}`;
+  return `${icon} **CI Workflow: ${statusLabel}** • ${workflowLabel}`;
 }
 
 export function buildCiReply(ci: CiStatus): MessageCreateOptions {
@@ -234,9 +238,10 @@ export function buildReviewReply(
   reviewer?: string
 ): MessageCreateOptions {
   const isApproved = status === 'approved';
-  const label = isApproved ? 'Approved' : 'Changes Requested';
+  const icon = isApproved ? '✅' : status === 'changes_requested' ? '⚠️' : '💬';
+  const label = isApproved ? 'Approved' : status === 'changes_requested' ? 'Changes Requested' : 'Commented';
   const reviewerText = reviewer ? `@${reviewer}` : 'Reviewer';
-  const content = `**Review by ${reviewerText}** • **${label}**`;
+  const content = `${icon} **Review by ${reviewerText}** • **${label}**`;
 
   const embeds = [];
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
@@ -269,7 +274,7 @@ export function buildReviewReply(
 
 export function buildMergedReply(mergedBy?: string, baseBranch?: string): MessageCreateOptions {
   const byText = mergedBy ? ` by **@${mergedBy}**` : '';
-  const content = `**PR Merged to \`${baseBranch ?? 'main'}\`**${byText}`;
+  const content = `🎉 **PR Merged to \`${baseBranch ?? 'main'}\`**${byText}`;
   const embeds = [];
   if (areGifsEnabled()) {
     embeds.push(buildReactionEmbed('merged', 'PR Merged & Shipped', VIBRANT_COLORS.PURPLE));
@@ -283,7 +288,7 @@ export function buildMergedReply(mergedBy?: string, baseBranch?: string): Messag
 export function buildClosedReply(closedBy?: string): MessageCreateOptions {
   const byText = closedBy ? ` by **@${closedBy}**` : '';
   return {
-    content: `**PR Closed without merging**${byText}`,
+    content: `🚫 **PR Closed without merging**${byText}`,
   };
 }
 
@@ -332,14 +337,14 @@ export function buildIssueEmbed(issue: IssueData): EmbedBuilder {
 export function buildIssueClosedReply(closedBy?: string, stateReason?: string | null): string {
   const byText = closedBy ? ` by @${closedBy}` : '';
   if (stateReason === 'not_planned') {
-    return `**Closed as not planned**${byText}`;
+    return `🚫 **Closed as not planned**${byText}`;
   }
-  return `**Issue Closed**${byText}`;
+  return `✅ **Issue Closed**${byText}`;
 }
 
 export function buildIssueReopenedReply(reopenedBy?: string): string {
   const byText = reopenedBy ? ` by @${reopenedBy}` : '';
-  return `**Issue Reopened**${byText}`;
+  return `🔄 **Issue Reopened**${byText}`;
 }
 
 export function buildReleaseEmbed(
@@ -582,10 +587,10 @@ function getPrStateLabel(
   state: 'open' | 'closed' | 'merged',
   draft: boolean
 ): string {
-  if (draft) return ' `[DRAFT]`';
-  if (state === 'merged') return ' `[MERGED]`';
-  if (state === 'closed') return ' `[CLOSED]`';
-  return '';
+  if (draft) return ' `[DRAFT ⚪]`';
+  if (state === 'merged') return ' `[MERGED 🟣]`';
+  if (state === 'closed') return ' `[CLOSED 🔴]`';
+  return ' `[OPEN 🟢]`';
 }
 
 function getPrColor(
@@ -607,8 +612,9 @@ function getHumanReviewStatus(
   status: 'approved' | 'changes_requested',
   reviewer?: string
 ): string {
+  const icon = status === 'approved' ? '✅' : '⚠️';
   const label = status === 'approved' ? '**Approved**' : '**Changes Requested**';
-  return reviewer ? `${label} by @${reviewer}` : label;
+  return reviewer ? `${icon} ${label} by @${reviewer}` : `${icon} ${label}`;
 }
 
 
@@ -617,15 +623,15 @@ function getCiStatusText(ci: CiStatus): string {
 
   switch (ci.status) {
     case 'pending':
-      return `*Pending*${name}`;
+      return `⏳ *Pending*${name}`;
     case 'running':
-      return `**Running...**${name}`;
+      return `🔄 **Running...**${name}`;
     case 'success':
-      return `**Passed**${name}`;
+      return `✅ **Passed**${name}`;
     case 'failure':
-      return `**Failed**${name}`;
+      return `❌ **Failed**${name}`;
     case 'cancelled':
-      return `**Cancelled**${name}`;
+      return `⚠️ **Cancelled**${name}`;
   }
 }
 

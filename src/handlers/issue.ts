@@ -118,19 +118,19 @@ async function createIssueMessageWithThread(
   db: StateDb,
   repo: string,
   issue: IssueData,
-  threadMessage: string
+  threadMessage?: string
 ): Promise<void> {
   const embed = buildIssueEmbed(issue);
   const message = await withRetry(() => channel.send({ embeds: [embed] }));
 
-  const thread = await withRetry(() => message.startThread({
-    name: buildThreadName('Issue', issue.number, issue.title),
-    autoArchiveDuration: 1440,
-  }));
+  db.saveIssueMessage(repo, issue.number, channel.id, message.id, null);
 
-  db.saveIssueMessage(repo, issue.number, channel.id, message.id, thread.id);
-
-  await withRetry(() => thread.send(threadMessage));
+  if (threadMessage) {
+    await withRetry(() => channel.send({
+      content: threadMessage,
+      reply: { messageReference: message.id, failIfNotExists: false }
+    }));
+  }
 }
 
 async function handleIssueStateChange(
@@ -148,8 +148,11 @@ async function handleIssueStateChange(
       const embed = buildIssueEmbed(issue);
       await withRetry(() => message.edit({ embeds: [embed] }));
 
-      const thread = await getOrCreateIssueThread(channel, db, repo, issue, existing);
-      await withRetry(() => thread.send(replyText));
+      // Send state change notification directly to channel
+      await withRetry(() => channel.send({
+        content: replyText,
+        reply: { messageReference: message.id, failIfNotExists: false }
+      }));
       db.updateIssueMessageTimestamp(repo, issue.number);
       return;
     } catch (error: unknown) {
