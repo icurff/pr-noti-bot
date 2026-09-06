@@ -235,24 +235,54 @@ export function buildReviewReply(
   status: string,
   comments?: number,
   url?: string,
-  reviewer?: string
+  reviewer?: string,
+  prNumber?: number,
+  prTitle?: string,
+  prUrl?: string
 ): MessageCreateOptions {
   const isApproved = status === 'approved';
-  const icon = isApproved ? '✅' : status === 'changes_requested' ? '⚠️' : '💬';
-  const label = isApproved ? 'Approved' : status === 'changes_requested' ? 'Changes Requested' : 'Commented';
-  const reviewerText = reviewer ? `@${reviewer}` : 'Reviewer';
-  const content = `${icon} **Review by ${reviewerText}** • **${label}**`;
+  const isChangesRequested = status === 'changes_requested';
+  const isCommented = !isApproved && !isChangesRequested;
+
+  const icon = isApproved ? '✅' : isChangesRequested ? '⚠️' : '💬';
+  const label = isApproved ? 'Approved' : isChangesRequested ? 'Changes Requested' : 'Left a comment';
+  const reviewerText = reviewer ? `**@${reviewer}**` : '**Reviewer**';
+
+  // Build PR reference line
+  const prRef = prNumber && prTitle
+    ? prUrl
+      ? `[**PR #${prNumber}** — ${prTitle}](${prUrl})`
+      : `**PR #${prNumber}** — ${prTitle}`
+    : null;
+
+  const lines: string[] = [
+    `${icon} ${reviewerText} • **${label}**`,
+  ];
+  if (prRef) lines.push(`> 📋 ${prRef}`);
+
+  const content = lines.join('\n');
 
   const embeds = [];
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
   if (areGifsEnabled()) {
-    const category = isApproved ? 'approved' : 'needs_work';
-    const title = isApproved
-      ? `Approved by @${reviewer ?? 'Reviewer'}`
-      : `Changes Requested by @${reviewer ?? 'Reviewer'}`;
-    const color = isApproved ? VIBRANT_COLORS.EMERALD : VIBRANT_COLORS.AMBER;
-    embeds.push(buildReactionEmbed(category, title, color));
+    let category: string;
+    let embedTitle: string;
+    let color: number;
+    if (isApproved) {
+      category = 'approved';
+      embedTitle = `✅ Approved by @${reviewer ?? 'Reviewer'}`;
+      color = VIBRANT_COLORS.EMERALD;
+    } else if (isChangesRequested) {
+      category = 'needs_work';
+      embedTitle = `⚠️ Changes requested by @${reviewer ?? 'Reviewer'}`;
+      color = VIBRANT_COLORS.AMBER;
+    } else {
+      category = 'opened';
+      embedTitle = `💬 Comment by @${reviewer ?? 'Reviewer'}`;
+      color = VIBRANT_COLORS.CYAN;
+    }
+    embeds.push(buildReactionEmbed(category, embedTitle, color));
   }
 
   if (url) {
@@ -262,6 +292,14 @@ export function buildReviewReply(
         .setStyle(ButtonStyle.Link)
         .setURL(url)
     );
+    if (prUrl) {
+      row.addComponents(
+        new ButtonBuilder()
+          .setLabel('View PR')
+          .setStyle(ButtonStyle.Link)
+          .setURL(prUrl)
+      );
+    }
     components.push(row);
   }
 

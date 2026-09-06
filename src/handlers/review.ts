@@ -6,7 +6,7 @@ import { Client, TextChannel } from 'discord.js';
 import { StateDb } from '../db/state.js';
 import { buildReviewReply } from '../embeds/builders.js';
 import { getChannelForEvent, ChannelConfig } from '../config/channels.js';
-import { updatePrEmbedAndNotify } from './pr.js';
+import { updatePrEmbedAndNotify, buildEmbedWithStatus } from './pr.js';
 import { getExistingPrMessage } from '../discord/lookup.js';
 import { withRetry } from '../utils/retry.js';
 
@@ -104,9 +104,18 @@ export async function handleReviewEvent(
   }
   const verdict = review.state;
 
+  // Fetch PR metadata to enrich the notification
+  const statusData = buildEmbedWithStatus(db, repo, pr.number);
+  const prData = statusData?.prData;
+
   const result = await updatePrEmbedAndNotify(
     channel, db, repo, pr.number, existing,
-    buildReviewReply('human', verdict, undefined, review.html_url, review.user.login),
+    buildReviewReply(
+      'human', verdict, undefined, review.html_url, review.user.login,
+      pr.number,
+      prData?.title,
+      prData?.url,
+    ),
     // Update status in DB so the rebuilt embed reflects the verdict
     () => db.updateHumanReviewStatus(repo, pr.number, verdict, review.user.login)
   );
