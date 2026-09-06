@@ -147,8 +147,8 @@ async function handlePrClosed(
   // Update the original embed with full status, and post the close/merge
   // reply to the thread
   const reply = pr.state === 'merged'
-    ? buildMergedReply(pr.mergedBy, pr.baseBranch)
-    : buildClosedReply();
+    ? buildMergedReply(pr.mergedBy, pr.baseBranch, pr.number, pr.title, pr.url)
+    : buildClosedReply(pr.mergedBy, pr.number, pr.title, pr.url);
   if (existing && await editExistingPrMessage(channel, db, repo, pr, existing, { threadReply: reply })) {
     return;
   }

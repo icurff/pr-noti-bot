@@ -9,34 +9,28 @@ export type ReactionCategory = 'merged' | 'opened' | 'approved' | 'needs_work';
 
 const GIF_POOLS: Record<ReactionCategory, string[]> = {
   merged: [
-    'https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif', // Minions cheering
-    'https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif', // High five victory
-    'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif', // Leo DiCaprio toast
-    'https://media.giphy.com/media/DhstvI3CH03yOTXRjs/giphy.gif', // Office dancing
-    'https://media.giphy.com/media/g9582DNuQppxC/giphy.gif',     // Gatsby celebration
-    'https://media.giphy.com/media/ely3apij36BJhoZ234/giphy.gif', // Confetti
-    'https://media.giphy.com/media/10uEX5kfeodYgo/giphy.gif',     // Borat great success
+    'https://i.giphy.com/26u4cqiYI30juCOGY.gif', // Minions cheering
+    'https://i.giphy.com/artj92V8o75VPL7AeQ.gif', // High five victory
+    'https://i.giphy.com/3o7abKhOpu0NwenH3O.gif', // Leo DiCaprio toast
+    'https://i.giphy.com/g9582DNuQppxC.gif',     // Gatsby celebration
+    'https://i.giphy.com/10uEX5kfeodYgo.gif',     // Borat great success
   ],
   opened: [
-    'https://media.giphy.com/media/LmN8OYiY4m0X85K0Zz/giphy.gif', // Let's do this
-    'https://media.giphy.com/media/b5LTssxCLpvVe/giphy.gif',     // Hacker typing fast
-    'https://media.giphy.com/media/unQ3IJU2RG7DO/giphy.gif',     // Cat coding
-    'https://media.giphy.com/media/nbvFVPiEiJH6JOGIok/giphy.gif', // Clapping
-    'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif',     // Thumbs up
+    'https://i.giphy.com/LmN8OYiY4m0X85K0Zz.gif', // Let's do this
+    'https://i.giphy.com/b5LTssxCLpvVe.gif',     // Hacker typing fast
+    'https://i.giphy.com/nbvFVPiEiJH6JOGIok.gif', // Clapping
+    'https://i.giphy.com/111ebonMs90YLu.gif',     // Thumbs up
   ],
   approved: [
-    'https://media.giphy.com/media/XreQmk7ETCak0/giphy.gif',     // Approved stamp
-    'https://media.giphy.com/media/NEvPzZ8bdvtxG/giphy.gif',     // Nod of approval
-    'https://media.giphy.com/media/diUKszNTUghVe/giphy.gif',     // Chuck Norris thumbs up
-    'https://media.giphy.com/media/lMameLIF8ymIjqZXue/giphy.gif', // Party
+    'https://i.giphy.com/diUKszNTUghVe.gif',     // Chuck Norris thumbs up (Verified)
+    'https://i.giphy.com/111ebonMs90YLu.gif',     // Thumbs up classic (Verified)
+    'https://i.giphy.com/13G7mmmG4GYvEU.gif',     // Obama thumbs up (Verified)
   ],
   needs_work: [
-    'https://media.giphy.com/media/3o7TKwmnDgQb5jemjK/giphy.gif', // Wagging finger no
-    'https://media.giphy.com/media/puOukoEvH4uAw/giphy.gif',     // Hold up wait a minute
-    'https://media.giphy.com/media/l4pT0NtPSMV3pwJ20/giphy.gif', // Deep thinking
-    'https://media.giphy.com/media/3gNotAoIRZsb9UHPnj/giphy.gif', // Squinting inspecting
-    'https://media.giphy.com/media/QMHoU66sBXCAHonOmG/giphy.gif', // This is fine dog
-    'https://media.giphy.com/media/oOTTyHRHj0HYY/giphy.gif',     // Keyboard smash
+    'https://i.giphy.com/3o7TKwmnDgQb5jemjK.gif', // Wagging finger no
+    'https://i.giphy.com/puOukoEvH4uAw.gif',     // Hold up wait a minute
+    'https://i.giphy.com/l4pT0NtPSMV3pwJ20.gif', // Deep thinking
+    'https://i.giphy.com/QMHoU66sBXCAHonOmG.gif', // This is fine dog
   ],
 };
 

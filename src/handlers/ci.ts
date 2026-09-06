@@ -92,11 +92,15 @@ export async function handleCiEvent(
     db.updateCiStatus(repo, pr.number, ciStatus.status, run.name, run.html_url);
     console.log(`[repo-relay] Updated CI status to ${ciStatus.status}`);
 
+    const prData = db.getPrData(repo, pr.number);
+
     // Only post to thread for completed runs
     const result = await updatePrEmbedAndNotify(
       channel, db, repo, pr.number, existing,
       payload.action === 'completed'
-        ? (failedSteps ? buildCiFailureReply(ciStatus, failedSteps) : buildCiReply(ciStatus))
+        ? (failedSteps
+            ? buildCiFailureReply(ciStatus, failedSteps, pr.number, prData?.title, prData?.url)
+            : buildCiReply(ciStatus, pr.number, prData?.title, prData?.url))
         : undefined
     );
     if (result.posted) {

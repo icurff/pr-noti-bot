@@ -118,7 +118,13 @@ export function buildPrEmbed(
       embed.setImage(getRandomGif('merged'));
     }
   } else if (pr.state === 'open' && areGifsEnabled()) {
-    embed.setImage(getRandomGif('opened'));
+    if (reviews?.humanReview === 'approved') {
+      embed.setImage(getRandomGif('approved'));
+    } else if (reviews?.humanReview === 'changes_requested') {
+      embed.setImage(getRandomGif('needs_work'));
+    } else {
+      embed.setImage(getRandomGif('opened'));
+    }
   }
 
   return embed;
@@ -148,23 +154,43 @@ export function buildPushReply(
   return `🚀 **Push by @${author}** • (${link})`;
 }
 
-export function buildCiReplyText(ci: CiStatus): string {
+export function buildCiReplyText(
+  ci: CiStatus,
+  prNumber?: number,
+  prTitle?: string,
+  prUrl?: string
+): string {
   const statusLabel = ci.status === 'success' ? 'Passed' : ci.status === 'failure' ? 'Failed' : ci.status === 'running' ? 'Running...' : 'Pending';
   const icon = ci.status === 'success' ? '✅' : ci.status === 'failure' ? '❌' : ci.status === 'running' ? '🔄' : '⏳';
   const workflowLabel = ci.workflowName ? `\`${ci.workflowName}\`` : '`CI`';
-  return `${icon} **CI Workflow: ${statusLabel}** • ${workflowLabel}`;
+
+  const lines = [`${icon} **CI Workflow: ${statusLabel}** • ${workflowLabel}`];
+
+  if (prNumber != null && prTitle) {
+    const prRef = prUrl
+      ? `[**PR #${prNumber}** — ${prTitle}](${prUrl})`
+      : `**PR #${prNumber}** — ${prTitle}`;
+    lines.push(`> 📋 ${prRef}`);
+  }
+
+  return lines.join('\n');
 }
 
-export function buildCiReply(ci: CiStatus): MessageCreateOptions {
-  const content = buildCiReplyText(ci);
+export function buildCiReply(
+  ci: CiStatus,
+  prNumber?: number,
+  prTitle?: string,
+  prUrl?: string
+): MessageCreateOptions {
+  const content = buildCiReplyText(ci, prNumber, prTitle, prUrl);
   const embeds = [];
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
   if (areGifsEnabled()) {
     if (ci.status === 'success') {
-      embeds.push(buildReactionEmbed('merged', 'CI Passed All Checks'));
+      embeds.push(buildReactionEmbed('merged', undefined));
     } else if (ci.status === 'failure') {
-      embeds.push(buildReactionEmbed('needs_work', 'CI Run Failed'));
+      embeds.push(buildReactionEmbed('needs_work', undefined));
     }
   }
 
@@ -187,8 +213,14 @@ export function buildCiReply(ci: CiStatus): MessageCreateOptions {
 
 const MESSAGE_LIMIT = 2000; // Discord message content hard cap
 
-export function buildCiFailureReply(ci: CiStatus, failedSteps: FailedStep[]): MessageCreateOptions {
-  const base = buildCiReplyText(ci);
+export function buildCiFailureReply(
+  ci: CiStatus,
+  failedSteps: FailedStep[],
+  prNumber?: number,
+  prTitle?: string,
+  prUrl?: string
+): MessageCreateOptions {
+  const base = buildCiReplyText(ci, prNumber, prTitle, prUrl);
   let content = base;
   if (failedSteps.length > 0) {
     const maxDisplay = 5;
@@ -210,7 +242,7 @@ export function buildCiFailureReply(ci: CiStatus, failedSteps: FailedStep[]): Me
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
   if (areGifsEnabled()) {
-    embeds.push(buildReactionEmbed('needs_work', 'CI Build Failed'));
+    embeds.push(buildReactionEmbed('needs_work', undefined));
   }
 
   if (ci.url) {
@@ -267,22 +299,18 @@ export function buildReviewReply(
 
   if (areGifsEnabled()) {
     let category: string;
-    let embedTitle: string;
     let color: number;
     if (isApproved) {
       category = 'approved';
-      embedTitle = `✅ Approved by @${reviewer ?? 'Reviewer'}`;
       color = VIBRANT_COLORS.EMERALD;
     } else if (isChangesRequested) {
       category = 'needs_work';
-      embedTitle = `⚠️ Changes requested by @${reviewer ?? 'Reviewer'}`;
       color = VIBRANT_COLORS.AMBER;
     } else {
       category = 'opened';
-      embedTitle = `💬 Comment by @${reviewer ?? 'Reviewer'}`;
       color = VIBRANT_COLORS.CYAN;
     }
-    embeds.push(buildReactionEmbed(category, embedTitle, color));
+    embeds.push(buildReactionEmbed(category, undefined, color));
   }
 
   if (url) {
@@ -310,12 +338,30 @@ export function buildReviewReply(
   };
 }
 
-export function buildMergedReply(mergedBy?: string, baseBranch?: string): MessageCreateOptions {
+export function buildMergedReply(
+  mergedBy?: string,
+  baseBranch?: string,
+  prNumber?: number,
+  prTitle?: string,
+  prUrl?: string
+): MessageCreateOptions {
   const byText = mergedBy ? ` by **@${mergedBy}**` : '';
-  const content = `🎉 **PR Merged to \`${baseBranch ?? 'main'}\`**${byText}`;
+  const lines: string[] = [
+    `🎉 **PR Merged to \`${baseBranch ?? 'main'}\`**${byText}`,
+  ];
+
+  // PR reference line
+  if (prNumber != null && prTitle) {
+    const prRef = prUrl
+      ? `[**PR #${prNumber}** — ${prTitle}](${prUrl})`
+      : `**PR #${prNumber}** — ${prTitle}`;
+    lines.push(`> 📋 ${prRef}`);
+  }
+
+  const content = lines.join('\n');
   const embeds = [];
   if (areGifsEnabled()) {
-    embeds.push(buildReactionEmbed('merged', 'PR Merged & Shipped', VIBRANT_COLORS.PURPLE));
+    embeds.push(buildReactionEmbed('merged', undefined, VIBRANT_COLORS.PURPLE));
   }
   return {
     content,
@@ -323,10 +369,27 @@ export function buildMergedReply(mergedBy?: string, baseBranch?: string): Messag
   };
 }
 
-export function buildClosedReply(closedBy?: string): MessageCreateOptions {
+export function buildClosedReply(
+  closedBy?: string,
+  prNumber?: number,
+  prTitle?: string,
+  prUrl?: string
+): MessageCreateOptions {
   const byText = closedBy ? ` by **@${closedBy}**` : '';
+  const lines: string[] = [
+    `🚫 **PR Closed without merging**${byText}`,
+  ];
+
+  // PR reference line
+  if (prNumber != null && prTitle) {
+    const prRef = prUrl
+      ? `[**PR #${prNumber}** — ${prTitle}](${prUrl})`
+      : `**PR #${prNumber}** — ${prTitle}`;
+    lines.push(`> 📋 ${prRef}`);
+  }
+
   return {
-    content: `🚫 **PR Closed without merging**${byText}`,
+    content: lines.join('\n'),
   };
 }
 
