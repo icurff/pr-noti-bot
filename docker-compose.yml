@@ -1,0 +1,47 @@
+services:
+  # =================================================================
+  # 1. PR Notification Bot (Node.js 20 Express + Discord Bot)
+  # =================================================================
+  prbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prbot
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - STATE_DIR=/app/state
+    volumes:
+      - ./state:/app/state
+    ports:
+      # Cổng nội bộ 127.0.0.1:3000 (Dành cho Reverse Proxy như Nginx trên Host)
+      - "127.0.0.1:3000:3000"
+
+  # =================================================================
+  # 2. Caddy Reverse Proxy (Tùy chọn - Tự động cấp SSL Let's Encrypt)
+  # Dùng khi muốn giải pháp All-in-One 100% bằng Docker mà không cần cài Nginx trên VPS
+  # Kích hoạt bằng lệnh: docker compose --profile all-in-one up -d
+  # =================================================================
+  caddy:
+    image: caddy:2-alpine
+    container_name: prbot_caddy
+    restart: always
+    profiles:
+      - all-in-one
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - prbot
+
+volumes:
+  caddy_data:
+  caddy_config:

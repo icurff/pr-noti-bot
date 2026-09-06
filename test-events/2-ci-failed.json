@@ -1,0 +1,20 @@
+{
+  "action": "completed",
+  "workflow_run": {
+    "id": 991827365,
+    "name": "CI / Test Suite & Build Verification",
+    "head_sha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",
+    "head_branch": "feat/feature-pr-101",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/my-org/my-project/actions/runs/991827365",
+    "pull_requests": [
+      {
+        "number": 101
+      }
+    ]
+  },
+  "repository": {
+    "full_name": "my-org/my-project"
+  }
+}

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output is committed for GitHub Action use
+# dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+dist/
+
+# State database & storage
+state/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Package manager locks (optional - keep npm)
+yarn.lock
+pnpm-lock.yaml

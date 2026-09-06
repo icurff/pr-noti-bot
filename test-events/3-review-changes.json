@@ -1,0 +1,23 @@
+{
+  "action": "submitted",
+  "review": {
+    "id": 772233446,
+    "user": {
+      "login": "lead-architect",
+      "type": "User"
+    },
+    "body": "Cần bổ sung thêm cơ chế retry và bắt timeout khi kết nối gateway mạng. ⚠️",
+    "state": "changes_requested",
+    "html_url": "https://github.com/my-org/my-project/pull/101#pullrequestreview-772233446",
+    "author_association": "COLLABORATOR"
+  },
+  "pull_request": {
+    "number": 101
+  },
+  "repository": {
+    "full_name": "my-org/my-project",
+    "owner": {
+      "login": "my-org"
+    }
+  }
+}

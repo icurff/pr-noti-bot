@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RepoRelay • Discord Bot Dashboard & Media Manager</title>
+  <meta name="description" content="Trung tâm quản lý RepoRelay Bot, kho GIF phản ứng động và kiểm thử Webhook GitHub">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+  <!-- Ambient background lighting -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Header / Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <span class="brand-name">RepoRelay</span>
+          <span class="brand-badge">Bot Manager</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-tab active" data-tab="tab-dashboard">
+          <span class="tab-icon">📊</span>
+          <span>Tổng Quan</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-media">
+          <span class="tab-icon">🎬</span>
+          <span>Kho GIF / Media</span>
+          <span class="media-count-badge" id="nav-media-count">0</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-simulator">
+          <span class="tab-icon">🧪</span>
+          <span>Mô Phỏng Webhook</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-system">
+          <span class="tab-icon">⚙️</span>
+          <span>Hệ Thống</span>
+        </button>
+      </nav>
+
+      <div class="bot-status-pill" id="bot-status-indicator">
+        <div class="status-dot"></div>
+        <img src="" alt="Bot Avatar" class="bot-avatar" id="nav-bot-avatar" style="display: none;">
+        <span class="bot-name" id="nav-bot-name">Đang kết nối...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="main-container">
+
+    <!-- TAB 1: DASHBOARD OVERVIEW -->
+    <section id="tab-dashboard" class="tab-content active">
+      <!-- Welcome Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-info">
+          <h1 class="hero-title">Chào mừng bạn đến với <span class="gradient-text">RepoRelay</span></h1>
+          <p class="hero-subtitle">Hệ thống cầu nối GitHub ➔ Discord tự động với kho ảnh GIF phản ứng trực quan và cập nhật tiến độ real-time.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="switchTab('tab-media')">
+            <span>🎬 Quản Lý Kho GIF</span>
+          </button>
+          <button class="btn btn-secondary" onclick="switchTab('tab-simulator')">
+            <span>🧪 Bắn Thử Nghiệm Webhook</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid (Bot Status + Total + 4 Media Pools) -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Trạng Thái Bot</span>
+            <span class="metric-icon">🤖</span>
+          </div>
+          <div class="metric-value text-emerald" id="metric-bot-status">Online</div>
+          <div class="metric-sub" id="metric-bot-tag">Discord Gateway 24/7</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Tổng Kho GIF</span>
+            <span class="metric-icon">🎬</span>
+          </div>
+          <div class="metric-value text-purple" id="metric-gif-total">0</div>
+          <div class="metric-sub">Tất cả ảnh & GIF trong SQLite</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">1. Mở PR (Opened)</span>
+            <span class="metric-icon">🔀</span>
+          </div>
+          <div class="metric-value text-emerald" id="metric-gif-opened">0</div>
+          <div class="metric-sub">PR mới, hăng hái bắt đầu...</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">2. Phê Duyệt (Approved)</span>
+            <span class="metric-icon">👍</span>
+          </div>
+          <div class="metric-value text-cyan" id="metric-gif-approved">0</div>
+          <div class="metric-sub">Review duyệt, LGTM, đồng ý...</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">3. Hợp Nhất (Merged)</span>
+            <span class="metric-icon">🚀</span>
+          </div>
+          <div class="metric-value text-purple" id="metric-gif-merged">0</div>
+          <div class="metric-sub">Ăn mừng, pháo hoa, nâng ly...</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">4. Cần Sửa (Needs Work)</span>
+            <span class="metric-icon">⚠️</span>
+          </div>
+          <div class="metric-value text-amber" id="metric-gif-needs-work">0</div>
+          <div class="metric-sub">CI fail, yêu cầu sửa, soi bug...</div>
+        </div>
+      </div>
+
+      <!-- Simulator Section inside Dashboard -->
+      <div class="card section-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">🧪 Thử Nghiệm Webhook Nhanh</h2>
+            <p class="card-subtitle">Bấm nút để giả lập gửi các sự kiện GitHub vào máy chủ và xem kết quả xuất hiện trên Discord ngay lập tức.</p>
+          </div>
+        </div>
+        <div class="simulator-buttons-grid">
+          <button class="sim-btn" onclick="triggerTestEvent('open')">
+            <div class="sim-btn-icon bg-emerald">🔀</div>
+            <div class="sim-btn-content">
+              <div class="sim-btn-title">Mở PR Mới</div>
+              <div class="sim-btn-desc">Màu Emerald + Thanh đo Diff</div>
+            </div>
+          </button>
+
+          <button class="sim-btn" onclick="triggerTestEvent('ci')">
+            <div class="sim-btn-icon bg-emerald">✅</div>
+            <div class="sim-btn-content">
+              <div class="sim-btn-title">CI Passed</div>
+              <div class="sim-btn-desc">Xanh lá + GIF ăn mừng 🎉</div>
+            </div>
+          </button>
+
+          <button class="sim-btn" onclick="triggerTestEvent('ci-fail')">
+            <div class="sim-btn-icon bg-coral">💥</div>
+            <div class="sim-btn-content">
+              <div class="sim-btn-title">CI Failed</div>
+              <div class="sim-btn-desc">Đỏ Coral + GIF sự cố ❌</div>
+            </div>
+          </button>
+
+          <button class="sim-btn" onclick="triggerTestEvent('approve')">
+            <div class="sim-btn-icon bg-emerald">👤</div>
+            <div class="sim-btn-content">
+              <div class="sim-btn-title">Review Approved</div>
+              <div class="sim-btn-desc">Review duyệt + GIF LGTM 👍</div>
+            </div>
+          </button>
+
+          <button class="sim-btn" onclick="triggerTestEvent('changes')">
+            <div class="sim-btn-icon bg-amber">⚠️</div>
+            <div class="sim-btn-content">
+              <div class="sim-btn-title">Changes Requested</div>
+              <div class="sim-btn-desc">Yêu cầu sửa + GIF soi bug 🔍</div>
+            </div>
+          </button>
+
+          <button class="sim-btn" onclick="triggerTestEvent('merge')">
+            <div class="sim-btn-icon bg-purple">🚀</div>
+            <div class="sim-btn-content">
+              <div class="sim-btn-title">Merge PR</div>
+              <div class="sim-btn-desc">Tím Hoàng Gia + Banner GIF 🎊</div>
+            </div>
+          </button>
+        </div>
+
+        <div id="sim-feedback" class="feedback-box" style="display: none;"></div>
+      </div>
+
+      <!-- Recent Webhook Events Log -->
+      <div class="card section-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📜 Nhật Ký Webhook Gần Nhất</h2>
+            <p class="card-subtitle">Các sự kiện GitHub vừa được bot ghi nhận và xử lý trong SQLite database.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadRecentEvents()">
+            <span>🔄 Làm mới</span>
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Sự Kiện</th>
+                <th>Số PR / Entity</th>
+                <th>Repository</th>
+                <th>Thời Gian</th>
+              </tr>
+            </thead>
+            <tbody id="events-table-body">
+              <tr>
+                <td colspan="5" class="text-center text-muted">Đang tải nhật ký sự kiện...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MEDIA & GIF POOL MANAGER -->
+    <section id="tab-media" class="tab-content">
+      <div class="media-management-header">
+        <div>
+          <h1 class="page-title">🎬 Quản Lý Kho GIF & Ảnh Động</h1>
+          <p class="page-subtitle">Xem, thêm mới hoặc xóa ảnh GIF được lưu trong SQLite. Bot sẽ bốc ngẫu nhiên từ kho này để gửi vào Discord.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddMediaModal()">
+          <span>➕ Thêm GIF Mới</span>
+        </button>
+      </div>
+
+      <!-- Category Filter Tabs (4 Reaction Pools) -->
+      <div class="category-filters">
+        <button class="cat-pill active" data-category="all" onclick="filterCategory('all')">
+          <span>🌟 Tất cả</span>
+          <span class="count-tag" id="count-all">0</span>
+        </button>
+        <button class="cat-pill" data-category="opened" onclick="filterCategory('opened')">
+          <span>🔀 1. Mở PR</span>
+          <span class="count-tag" id="count-opened">0</span>
+        </button>
+        <button class="cat-pill" data-category="approved" onclick="filterCategory('approved')">
+          <span>👍 2. Được Duyệt</span>
+          <span class="count-tag" id="count-approved">0</span>
+        </button>
+        <button class="cat-pill" data-category="merged" onclick="filterCategory('merged')">
+          <span>🚀 3. Đã Merge</span>
+          <span class="count-tag" id="count-merged">0</span>
+        </button>
+        <button class="cat-pill" data-category="needs_work" onclick="filterCategory('needs_work')">
+          <span>⚠️ 4. Cần Sửa</span>
+          <span class="count-tag" id="count-needs-work">0</span>
+        </button>
+      </div>
+
+      <!-- Media Grid -->
+      <div class="media-grid" id="media-cards-container">
+        <div class="loading-spinner">Đang tải kho GIF...</div>
+      </div>
+    </section>
+
+    <!-- TAB 3: WEBHOOK SIMULATOR -->
+    <section id="tab-simulator" class="tab-content">
+      <div class="card section-card">
+        <h1 class="page-title">🧪 Mô Phỏng Sự Kiện GitHub Webhook</h1>
+        <p class="page-subtitle">Kích hoạt các kịch bản mẫu trực tiếp vào Discord Bot để kiểm tra giao diện và màu sắc Embed.</p>
+
+        <!-- PR Number Selector & Explainer -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <label style="font-size: 13px; color: var(--text-dim); display: block; margin-bottom: 6px; font-weight: 600;">🎯 Số hiệu PR mục tiêu (Target PR #):</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="number" id="sim-pr-number" value="103" min="1" max="9999" class="form-input" style="width: 120px; font-size: 16px; font-weight: bold; text-align: center; padding: 6px 10px;">
+              <button class="btn btn-primary btn-sm" onclick="incrementSimPr()" title="Tăng số PR để tạo Embed mới tinh ở đáy kênh Discord">
+                <span>➕ Tạo PR Mới (+1)</span>
+              </button>
+            </div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); max-width: 480px; line-height: 1.5;">
+            💡 <strong>Cơ chế chống spam của RepoRelay:</strong> <em>"Một PR = Một Embed + Một Thread"</em>.<br>
+            Nếu PR đã tồn tại trên kênh Discord (như PR #101), bot sẽ <strong>chỉnh sửa trực tiếp tin nhắn cũ</strong>. Để bot bắn một tin nhắn Embed mới tinh màu Emerald kèm Diff Bar xuống đáy kênh, hãy tăng số PR lên (ví dụ: #103, #104...) rồi bấm <strong>"Gửi Sự Kiện Open"</strong>!
+          </div>
+        </div>
+
+        <div id="sim-feedback-tab" class="feedback-box" style="display: none; margin-bottom: 24px;"></div>
+
+        <div class="simulator-cards-container">
+          <div class="sim-card">
+            <div class="sim-card-badge bg-emerald">Pull Request</div>
+            <h3>1. Tạo PR Mới (Open)</h3>
+            <p>Gửi sự kiện mở Pull Request với số PR đang chọn. Bot sẽ tạo một Embed màu Emerald kèm thanh đo trực quan `🟩🟩🟩🟩🟥` và mở một Thread Discord riêng.</p>
+            <button class="btn btn-primary btn-block" onclick="triggerTestEvent('open')">🚀 Gửi Sự Kiện Open</button>
+          </div>
+
+          <div class="sim-card">
+            <div class="sim-card-badge bg-emerald">Workflow Run</div>
+            <h3>2. CI Passed (Thành Công)</h3>
+            <p>Cập nhật kết quả workflow kiểm thử CI thành công. Cập nhật Embed chính và đăng vào Thread kèm 1 GIF ăn mừng ngẫu nhiên.</p>
+            <button class="btn btn-primary btn-block" onclick="triggerTestEvent('ci')">🎉 Gửi Sự Kiện CI Pass</button>
+          </div>
+
+          <div class="sim-card">
+            <div class="sim-card-badge bg-coral">Workflow Run</div>
+            <h3>3. CI Failed (Thất Bại)</h3>
+            <p>Mô phỏng lỗi biên dịch hoặc rớt unit test. Bot đổi trạng thái CI thành màu Đỏ và đính kèm GIF sự cố hài hước (This is fine dog...).</p>
+            <button class="btn btn-danger btn-block" onclick="triggerTestEvent('ci-fail')">💥 Gửi Sự Kiện CI Fail</button>
+          </div>
+
+          <div class="sim-card">
+            <div class="sim-card-badge bg-emerald">Review</div>
+            <h3>4. Review Approved</h3>
+            <p>Mô phỏng reviewer phê duyệt code. Cập nhật danh sách review trên Embed chính và gửi GIF gật đầu LGTM vào luồng thảo luận.</p>
+            <button class="btn btn-primary btn-block" onclick="triggerTestEvent('approve')">✅ Gửi Review Approve</button>
+          </div>
+
+          <div class="sim-card">
+            <div class="sim-card-badge bg-amber">Review</div>
+            <h3>5. Review Changes Requested</h3>
+            <p>Mô phỏng reviewer yêu cầu chỉnh sửa. Đổi trạng thái Review sang màu Vàng Cam và gửi GIF soi kính lúp tìm bug vào luồng.</p>
+            <button class="btn btn-warning btn-block" onclick="triggerTestEvent('changes')">⚠️ Gửi Yêu Cầu Sửa Code</button>
+          </div>
+
+          <div class="sim-card">
+            <div class="sim-card-badge bg-purple">Pull Request</div>
+            <h3>6. Merge PR (Hoàn Tất)</h3>
+            <p>Đóng và merge PR vào nhánh chính. Embed chính chuyển sang màu Tím Hoàng Gia `[MERGED]` và gắn Banner pháo hoa ăn mừng.</p>
+            <button class="btn btn-purple btn-block" onclick="triggerTestEvent('merge')">🎊 Gửi Sự Kiện Merge</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SYSTEM & SETTINGS -->
+    <section id="tab-system" class="tab-content">
+      <div class="card section-card">
+        <h1 class="page-title">⚙️ Cấu Hình & Giám Sát Hệ Thống</h1>
+        <p class="page-subtitle">Thông tin chi tiết về cổng kết nối, môi trường thực thi và trạng thái tài nguyên.</p>
+
+        <div class="system-info-grid">
+          <div class="sys-item">
+            <span class="sys-label">Webhook Endpoint URL:</span>
+            <code class="sys-value" id="sys-webhook-url">http://.../webhook</code>
+          </div>
+          <div class="sys-item">
+            <span class="sys-label">Bảo mật Chữ ký HMAC (Secret):</span>
+            <span class="sys-value" id="sys-secret-status">Đang tải...</span>
+          </div>
+          <div class="sys-item">
+            <span class="sys-label">Kênh Discord PRs:</span>
+            <code class="sys-value" id="sys-channel-prs">--</code>
+          </div>
+          <div class="sys-item">
+            <span class="sys-label">Kênh Discord Issues:</span>
+            <code class="sys-value" id="sys-channel-issues">Chung kênh PRs</code>
+          </div>
+          <div class="sys-item">
+            <span class="sys-label">Phiên bản Node.js:</span>
+            <span class="sys-value" id="sys-node-version">--</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ADD NEW MEDIA GIF -->
+  <div id="add-media-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title">➕ Thêm GIF Mới Vào Kho</h2>
+        <button class="modal-close" onclick="closeAddMediaModal()">&times;</button>
+      </div>
+
+      <form id="add-media-form" onsubmit="handleSaveMedia(event)">
+        <div class="form-group">
+          <label class="form-label" for="media-category">Danh mục sự kiện *</label>
+          <select id="media-category" class="form-input" required>
+            <option value="opened">🔀 1. Mở PR Mới (Opened - Khởi động, hăng hái code)</option>
+            <option value="approved">👍 2. Phê Duyệt / LGTM (Approved - Đồng ý, vỗ tay)</option>
+            <option value="merged">🚀 3. Hợp Nhất Thành Công (Merged - Pháo hoa, ăn mừng)</option>
+            <option value="needs_work">⚠️ 4. Cần Chỉnh Sửa / Báo Lỗi (Needs Work - Soi bug, CI fail)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="media-url">Link URL Ảnh / GIF *</label>
+          <input type="url" id="media-url" class="form-input" placeholder="https://media.giphy.com/... hoặc link .gif, .png" required oninput="updateLivePreview(this.value)">
+          <span class="form-hint">Hỗ trợ link trực tiếp từ Giphy, Tenor, Imgur hoặc bất kỳ trang CDN nào.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="media-title">Tên / Mô tả gợi nhớ (Tùy chọn)</label>
+          <input type="text" id="media-title" class="form-input" placeholder="Ví dụ: Minions ăn mừng, Chó this is fine...">
+        </div>
+
+        <!-- Live Preview Box -->
+        <div class="form-group">
+          <label class="form-label">Xem trước ảnh thực tế:</label>
+          <div class="preview-box" id="modal-preview-box">
+            <span class="preview-placeholder">Dán URL ảnh ở trên để xem trước tại đây</span>
+            <img id="modal-preview-img" src="" alt="Preview" style="display: none;" onerror="handlePreviewError()">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeAddMediaModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-media">Lưu Vào Kho</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

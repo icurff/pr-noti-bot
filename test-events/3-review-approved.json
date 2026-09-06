@@ -1,0 +1,23 @@
+{
+  "action": "submitted",
+  "review": {
+    "id": 772233445,
+    "user": {
+      "login": "senior-reviewer",
+      "type": "User"
+    },
+    "body": "LGTM! Code sạch sẽ, đầy đủ test cases và performance rất tốt! 👍🚀",
+    "state": "approved",
+    "html_url": "https://github.com/my-org/my-project/pull/101#pullrequestreview-772233445",
+    "author_association": "COLLABORATOR"
+  },
+  "pull_request": {
+    "number": 101
+  },
+  "repository": {
+    "full_name": "my-org/my-project",
+    "owner": {
+      "login": "my-org"
+    }
+  }
+}
