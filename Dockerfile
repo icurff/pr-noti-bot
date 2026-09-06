@@ -1,22 +1,15 @@
-# Stage 1: Build & compile TypeScript and native dependencies
-FROM node:20-bookworm-slim AS builder
+# Stage 1: Build TypeScript & download prebuilt dependencies
+FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
-
-# Install compilation tools required for better-sqlite3
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy package manifests
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for tsc)
+# Install dependencies (Node 22 matches official better-sqlite3 prebuilt binaries - NO C++ compilation needed!)
 RUN npm ci
 
-# Copy source code and build
+# Copy source and build TypeScript
 COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
@@ -25,7 +18,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # Stage 2: Minimal production image
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
