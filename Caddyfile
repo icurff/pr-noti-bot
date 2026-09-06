@@ -1,14 +1,9 @@
-# Cấu hình Caddy Reverse Proxy cho domain prbot.icuff.me
+# Cấu hình Caddy Reverse Proxy cho domain prbot.icurff.me
 # Caddy sẽ tự động:
 # 1. Xin chứng chỉ SSL Let's Encrypt hoàn toàn miễn phí
 # 2. Tự động chuyển hướng HTTP (port 80) sang HTTPS (port 443)
 # 3. Tự động gia hạn SSL trước khi hết hạn
 
-prbot.icuff.me {
-    reverse_proxy prbot:3000 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
+prbot.icurff.me {
+    reverse_proxy prbot:3000
 }

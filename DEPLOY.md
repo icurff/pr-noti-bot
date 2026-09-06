@@ -1,5 +1,5 @@
 # Hướng Dẫn Triển Khai All-in-One 100% Docker + Caddy (Tự Động Cấp SSL Let's Encrypt)
-### Domain: `prbot.icuff.me` — Hoạt động 24/7 trên VPS Linux
+### Domain: `prbot.icurff.me` — Hoạt động 24/7 trên VPS Linux
 
 Tài liệu này hướng dẫn cách đưa hệ thống **RepoRelay (PR Notification Bot)** lên máy chủ Linux (Ubuntu/Debian) bằng giải pháp **Docker Compose + Caddy** khép kín 100%. 
 
@@ -11,7 +11,7 @@ Không cần cài Node.js, không cần cài Nginx, không cần cài Certbot tr
 
 ```mermaid
 flowchart TD
-    Internet[Internet / GitHub Webhook / Trình duyệt] -->|HTTPS :443 & HTTP :80| DNS[Cloudflare DNS: prbot.icuff.me]
+    Internet[Internet / GitHub Webhook / Trình duyệt] -->|HTTPS :443 & HTTP :80| DNS[Cloudflare DNS: prbot.icurff.me]
     DNS --> VPS[VPS Linux]
 
     subgraph DockerCompose [Docker Compose Network]
@@ -32,7 +32,7 @@ flowchart TD
 
 ## Mục Lục
 1. [Yêu Cầu Tiên Quyết](#1-yêu-cầu-tiên-quyết)
-2. [Cấu Hình DNS Domain prbot.icuff.me](#2-cấu-hình-dns-domain-prboticuffme)
+2. [Cấu Hình DNS Domain prbot.icurff.me](#2-cấu-hình-dns-domain-prboticuffme)
 3. [Cài Đặt Docker & Docker Compose Trên VPS](#3-cài-đặt-docker--docker-compose-trên-vps)
 4. [Tải Mã Nguồn & Tạo File .env](#4-tải-mã-nguồn--tạo-file-env)
 5. [Khởi Chạy Toàn Bộ Hệ Thống Bằng 1 Lệnh (24/7)](#5-khởi-chạy-toàn-bộ-hệ-thống-bằng-1-lệnh-247)
@@ -46,7 +46,7 @@ flowchart TD
 ## 1. Yêu Cầu Tiên Quyết
 
 - **Máy chủ VPS**: Ubuntu 22.04 LTS / 24.04 LTS hoặc Debian 12 (RAM tối thiểu 1GB).
-- **Domain**: Sở hữu domain `icuff.me` (quản lý DNS trên Cloudflare hoặc nhà cung cấp tên miền).
+- **Domain**: Sở hữu domain `icurff.me` (quản lý DNS trên Cloudflare hoặc nhà cung cấp tên miền).
 - **Discord Bot**:
   - `DISCORD_BOT_TOKEN`: Lấy tại [Discord Developer Portal](https://discord.com/developers/applications).
   - Đã bật: **Server Members Intent** và **Message Content Intent**.
@@ -55,7 +55,7 @@ flowchart TD
 
 ---
 
-## 2. Cấu Hình DNS Domain `prbot.icuff.me`
+## 2. Cấu Hình DNS Domain `prbot.icurff.me`
 
 Vào trang quản lý DNS (ví dụ: Cloudflare) và thêm 1 bản ghi:
 
@@ -68,7 +68,7 @@ Vào trang quản lý DNS (ví dụ: Cloudflare) và thêm 1 bản ghi:
 
 Kiểm tra tên miền đã nhận đúng IP máy chủ chưa:
 ```bash
-ping prbot.icuff.me
+ping prbot.icurff.me
 ```
 
 ---
@@ -166,7 +166,7 @@ docker compose up -d --build
 1. Docker tự động build image `prbot` (Node.js 20, tự build SQLite native addon C++).
 2. Docker tải container `caddy` chính thức.
 3. Container `prbot` chạy ngầm, kết nối tới Discord Gateway, sẵn sàng nhận webhook.
-4. Caddy tự động liên hệ với Let's Encrypt, chứng minh quyền sở hữu domain `prbot.icuff.me`, tải chứng chỉ SSL về và tự động bật HTTPS trên cổng 443!
+4. Caddy tự động liên hệ với Let's Encrypt, chứng minh quyền sở hữu domain `prbot.icurff.me`, tải chứng chỉ SSL về và tự động bật HTTPS trên cổng 443!
 5. Cả 2 container đều có chính sách `restart: always` nên sẽ **tự động chạy lại 24/7** kể cả khi VPS bị khởi động lại.
 
 ### Các lệnh quản lý container hàng ngày:
@@ -196,7 +196,7 @@ Sau khi hệ thống chạy, tiến hành gắn Webhook vào Repository trên Gi
 1. Vào GitHub Repository của dự án → Chọn tab **Settings** → Menu bên trái chọn **Webhooks**.
 2. Nhấn nút **Add webhook**.
 3. Điền các trường thông tin:
-   - **Payload URL**: `https://prbot.icuff.me/webhook`
+   - **Payload URL**: `https://prbot.icurff.me/webhook`
    - **Content type**: `application/json` *(bắt buộc)*
    - **Secret**: Nhập chính xác chuỗi `GITHUB_WEBHOOK_SECRET` bạn đã cấu hình trong file `.env`.
    - **SSL verification**: Chọn `Enable SSL verification`.
@@ -220,12 +220,12 @@ GitHub sẽ gửi 1 ping request kiểm tra. Khi thấy biểu tượng tích xa
 ## 7. Kiểm Tra Trạng Thái & Web Dashboard
 
 Mở trình duyệt truy cập:
-👉 **`https://prbot.icuff.me`**
+👉 **`https://prbot.icurff.me`**
 
 Bạn sẽ thấy:
 - Trình duyệt hiển thị ổ khóa bảo mật **HTTPS** do Let's Encrypt cấp.
 - **Bot Status**: `Online` kèm ping ms kết nối trực tiếp đến Discord Gateway.
-- **Webhook Endpoint**: `https://prbot.icuff.me/webhook`.
+- **Webhook Endpoint**: `https://prbot.icurff.me/webhook`.
 - **HMAC Secret**: Báo trạng thái an toàn `Đã kích hoạt (HMAC-SHA256)`.
 - **Kho Phản Ứng Media (GIF)**: 4 phân loại rõ ràng (`opened`, `approved`, `merged`, `needs_work`).
 - **Webhook Simulator**: Cho phép bấm thử nghiệm bắn các sự kiện mô phỏng vào Discord ngay trên giao diện web.
